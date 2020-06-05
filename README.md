@@ -19,3 +19,7 @@ python3 ./src/server.py --Ice.Config=./config/server.config
 ```sh
 python3 ./src/client.py 'server1 -t -e 1.1:tcp -h 192.168.150.134 -p 9090'
 ```
+
+## Estado actual del proyecto
+
+Comunicacion basica entre un servidor y un cliente utilizando un fichero de configuracion para el servidor.
