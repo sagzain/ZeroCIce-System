@@ -10,6 +10,21 @@ Samuel González Linde
 
 Nos situamos en la raiz de la carpeta del proyecto y ejecutamos los diferentes comandos para poner en marcha servidor y cliente.
 
+```sh
+cd /zeroC-system
+```
+
+**Directorio para la BDD**
+
+```sh
+mkdir -p /tmp/db/registry
+```
+
+**Activación del registry**
+```sh
+icegridregistry --Ice.Config=./config/node.config
+```
+
 **Ejecucion del servidor**
 ```sh
 python3 ./src/server.py --Ice.Config=./config/server.config
@@ -17,9 +32,12 @@ python3 ./src/server.py --Ice.Config=./config/server.config
 
 **Ejecucion del cliente**
 ```sh
-python3 ./src/client.py 'server1 -t -e 1.1:tcp -h 192.168.150.134 -p 9090'
+python3 ./src/client.py --Ice.Config=./config/client.config 'server1 -t @ ServerAdapter1'
 ```
 
 ## Estado actual del proyecto
 
-Comunicacion basica entre un servidor y un cliente utilizando un fichero de configuracion para el servidor.
+Comunicacion basica entre un servidor y un cliente haciendo uso de proxies indirectos (transparencia de localizacion).
+
+Se hace uso del registry para registrar la referencia al objeto del servidor y el locator para consultar el endpoint del adaptador.
+
