@@ -30,14 +30,21 @@ icegridregistry --Ice.Config=./config/node.config
 python3 ./src/server.py --Ice.Config=./config/server.config
 ```
 
+**Ejecucion del intermediario**
+```sh
+python3 ./src/intermediate.py --Ice.Config=./config/intermediate.config 'server1 -t @ ServerAdapter1'
+```
+
 **Ejecucion del cliente**
 ```sh
-python3 ./src/client.py --Ice.Config=./config/client.config 'server1 -t @ ServerAdapter1'
+python3 ./src/client.py --Ice.Config=./config/client.config 'intermediate1 -t @ IntermediateAdapter1' 'Mensaje para el servidor'
 ```
 
 ## Estado actual del proyecto
 
-Comunicacion basica entre un servidor y un cliente haciendo uso de proxies indirectos (transparencia de localizacion).
+Comunicacion basica entre un servidor, un intermediario y un cliente haciendo uso de proxies indirectos (transparencia de localizacion).
 
-Se hace uso del registry para registrar la referencia al objeto del servidor y el locator para consultar el endpoint del adaptador.
+Se hace uso del registry para registrar la referencia al adaptador del servidor y el intermediario y el locator para consultar los endpoint de los adaptadores.
+
+El envío del mensaje consiste en un envío del cliente hacia un intermediario que se encarga de redireccionar el mensaje hacia el servidor.
 

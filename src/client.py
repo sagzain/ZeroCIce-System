@@ -9,12 +9,15 @@ import TrawlNet
 class Client(Ice.Application):
     def run(self, argv):
         proxy = self.communicator().stringToProxy(argv[1])
-        server = TrawlNet.ServerPrx.checkedCast(proxy)
+        intermediate = TrawlNet.IntermediatePrx.checkedCast(proxy)
         
-        if not server:
+        if not intermediate:
             raise RuntimeError('ERROR: The given proxy is not valid.')
 
-        server.execute('Hello World!')
+        if len(sys.argv) <= 2:
+            raise RuntimeError('ERROR: Not a valid number of arguments given.')    
+        
+        intermediate.execute(argv[2])
 
         return 0
 
