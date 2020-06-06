@@ -1,5 +1,5 @@
 # zeroC-system
-Sistema cliente-servidor que permite la descarga de ficheros mediante el uso de ZeroC Ice.
+Sistema cliente-servidor que permite la descarga de ficheros mediante el uso de ZeroC Ice - Sistemas Distribuidos - UCLM.
 
 ## Autor y Enlace
 https://github.com/Samuglz6/file-downloader-system
@@ -8,36 +8,50 @@ Samuel González Linde
 
 ## Ejecución
 
-Nos situamos en la raiz de la carpeta del proyecto y ejecutamos los diferentes comandos para poner en marcha servidor y cliente.
+Nos situamos en la raiz de la carpeta del proyecto y hacemos uso de los diferentes comandos que contiene el Makefile para poner en marcha nuestro proyecto.
 
 ```sh
 cd /zeroC-system
 ```
 
-**Directorio para la BDD**
-
-```sh
-mkdir -p /tmp/db/registry
-```
-
 **Activación del registry**
+
+Tanto la creacion de la BDD como la ejecución del registry estan recogidos bajo este unico comando.
+
 ```sh
-icegridregistry --Ice.Config=./config/node.config
+make run-registry
 ```
 
 **Ejecucion del servidor**
+
+Ahora el servidor genera un fichero .out donde almacenamos el proxy para ser usado por el intermediario
+
 ```sh
-python3 ./src/server.py --Ice.Config=./config/server.config
+make run-server
 ```
 
 **Ejecucion del intermediario**
+
+El intermediario tambien genera un proxy.out para ser usado por el cliente
+
 ```sh
-python3 ./src/intermediate.py --Ice.Config=./config/intermediate.config 'server1 -t @ ServerAdapter1'
+make run-intermediate
 ```
 
 **Ejecucion del cliente**
+
+El mensaje que envia el cliente está definido en el Makefile con el contenido: "Hola Mundo"
+
 ```sh
-python3 ./src/client.py --Ice.Config=./config/client.config 'intermediate1 -t @ IntermediateAdapter1' 'Mensaje para el servidor'
+make run-client
+```
+
+**Limpiar**
+
+Tambien hay un comando nuevo que nos permite eliminar aquellos archivos temporales que son usados durante la ejecucion del sistema
+
+```sh
+make clean
 ```
 
 ## Estado actual del proyecto
