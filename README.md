@@ -62,3 +62,14 @@ Se hace uso del registry para registrar la referencia al adaptador del servidor 
 
 El envío del mensaje consiste en un envío del cliente hacia un intermediario que se encarga de redireccionar el mensaje hacia el servidor.
 
+Actualmente se hace uso del lanzador de aplicaciones IceBox para lanzar un servicio IceStorm.
+
+Su ejecución consiste en la creacion de un directorio para el servicio IceStorm y la ejecución del Intermediario y el Cliente (Subscriber y Publisher).
+
+```
+mkdir -p IceStorm
+
+./src/intermediate.py --Ice.Config=./config/intermediate.config
+./src/client.py --Ice.Config=./config/client.config
+```
+
