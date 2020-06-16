@@ -8,36 +8,19 @@ Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
 
 class Client(Ice.Application):
-    def get_topic_manager(self):
-        key = 'IceStorm.TopicManager.Proxy'
-        proxy = self.communicator().propertyToProxy(key)
-
-        if proxy is None:
-            print("ERROR: Property", key, "not set")
-            return None
-            
-        print("Using IceStorm in: '%s'" % key)
-        return IceStorm.TopicManagerPrx.checkedCast(proxy)
-
     def run(self, argv):
-        t_manager = self.get_topic_manager()
-        if not t_manager:
-            print("ERROR: Invalid proxy.")
-            return 2
-    
-        t_name = "IntermediateTopic"
-        try:
-            topic = t_manager.retrieve(t_name)
-        except IceStorm.NoSuchTopic:
-            print("Topic not found, creating...")
-            topic = t_manager.create(t_name)
+        proxy = self.communicator().stringToProxy(argv[1])
+        intermediate = TrawlNet.IntermediatePrx.checkedCast(proxy)
+
+        if not intermediate:
+            raise RuntimeError('ERROR: The given proxy is not valid.')
+
+        '''
+        if len(sys.argv) <= 2:
+            raise RuntimeError('ERROR: Not a valid number of arguments given.') 
+        '''
         
-        publisher = topic.getPublisher()
-        intermediate = TrawlNet.IntermediatePrx.uncheckedCast(publisher)
-        
-        print("Publishing 2 'Hello World' events")
-        for i in range(2):
-            intermediate.execute("Hello World %s!" % i)
+        intermediate.execute("Hola Mundo!")
 
         return 0
 
