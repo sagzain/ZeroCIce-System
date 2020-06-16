@@ -21,6 +21,7 @@ class Intermediate(Ice.Application):
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
+        
         if proxy is None:
             print("ERROR: Property", key, "not set")
             return None

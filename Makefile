@@ -1,37 +1,34 @@
 #!/usr/bin/make -f
 # -*- mode:makefile -*-
 
+run-server:
+	$(MAKE) run-registry &
+	sleep 1
+	$(MAKE) run-icestorm &
+	sleep 1
+	$(MAKE) run-sender-factory &
+	sleep 1
+	$(MAKE) run-transfer-manager
 
 run-registry:
-	mkdir -p db/Registry
-	icegridregistry --Ice.Config=./config/registry.config
+	mkdir -p db/Registry 
+	icegridregistry --Ice.Config=registry.config
 
 run-icestorm:
 	mkdir -p IceStorm/
-	icebox --Ice.Config=./config/icebox.config
+	icebox --Ice.Config=icebox.config
 
-run-server:
-	./src/server.py --Ice.Config=./config/server.config
+run-sender-factory:
+	./sender_factory.py --Ice.Config=senders.config files/
 
-run-intermediate:
-	./src/intermediate.py --Ice.Config=./config/intermediate.config 
+run-transfer-manager:
+	./transfers_manager.py --Ice.Config=transfers.config
 
-run-client:
-	./src/client.py --Ice.Config=./config/client.config "intermediate1 -t -e 1.1 @ IntermediateAdapter1"
+run-client: create-client-workspace
+	./file_downloader.py --Ice.Config=client.config file1 file2
+
+create-client-workspace:
+	mkdir -p downloads/
 
 clean:
-	$(RM) -r *.out __pycache__ Registry db IceStorm
-	
-default:
-	$(MAKE) clean
-	$(MAKE) run-registry &
-	$(MAKE) run-icestorm &
-	$(MAKE) run-server &
-	$(MAKE) run-intermediate &
-	$(MAKE) run-client &
-
-
-
-
-
-
+	$(RM) -r downloads __pycache__ IceStorm Registry db
