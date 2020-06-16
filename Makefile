@@ -12,20 +12,20 @@ run-server:
 
 run-registry:
 	mkdir -p db/Registry 
-	icegridregistry --Ice.Config=registry.config
+	icegridregistry --Ice.Config=./config/registry.config
 
 run-icestorm:
 	mkdir -p IceStorm/
-	icebox --Ice.Config=icebox.config
+	icebox --Ice.Config=./config/icebox.config
 
 run-sender-factory:
-	./sender_factory.py --Ice.Config=senders.config files/
+	./src/sender_factory.py --Ice.Config=./config/senders.config files/
 
 run-transfer-manager:
-	./transfers_manager.py --Ice.Config=transfers.config
+	./src/transfers_manager.py --Ice.Config=./config/transfers.config
 
 run-client: create-client-workspace
-	./file_downloader.py --Ice.Config=client.config file1 file2
+	./src/file_downloader.py --Ice.Config=./config/client.config file1 file2
 
 create-client-workspace:
 	mkdir -p downloads/
