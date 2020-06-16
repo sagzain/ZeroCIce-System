@@ -2,4 +2,4 @@
 #
 
 mkdir -p downloads/
-./file_downloader.py --Ice.Config=client.config "$@"
+./src/file_downloader.py --Ice.Config=./config/client.config "$@"
