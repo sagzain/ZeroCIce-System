@@ -55,6 +55,6 @@ make clean
 
 Actualmente se hace uso del lanzador de aplicaciones IceBox para lanzar un servicio IceStorm.
 
-Se envia un mensaje simple que contiene un "Hola Mundo" entre el[Intermediario](src/intermediate.py) y el [Servidor](src/server.py) para la comprobación del correcto funcionamento del canal de eventos.
+Se envia un mensaje simple que contiene un "Hola Mundo" entre el [Intermediario](src/intermediate.py) y el [Servidor](src/server.py) para la comprobación del correcto funcionamento del canal de eventos.
 
 
