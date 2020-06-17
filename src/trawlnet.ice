@@ -40,7 +40,8 @@ module TrawlNet {
   };
 
   interface TransferFactory {
-    Transfer* newTransfer(ReceiverFactory* receiverFactory);
+    Transfer* newTransfer(string nombre);
+    //ReceiverFactory* receiverFactory
   };
 
   interface PeerEvent {
@@ -61,7 +62,4 @@ module TrawlNet {
       void execute(string message);
   };
 
-  interface Intermediate { 
-      void execute(string message);
-  };
 };
