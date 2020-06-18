@@ -7,16 +7,18 @@ Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
 
 class ReceiverI(TrawlNet.Receiver):
-    def start():
+    def start(self, current=None):
         print('Iniciando')
 
-    def destroy():
+    def destroy(self, current=None):
         print('Eliminando')
 
 class ReceiverFactoryI(TrawlNet.ReceiverFactory):
-    def create(fileName, sender, transfer):
+    def create(self, fileName, sender, transfer, current=None):
         servant = ReceiverI()
         proxy = current.adapter.addWithUUID(servant)
+
+        print('Creando receiver')
 
         return TrawlNet.ReceiverPrx.checkedCast(proxy)
 

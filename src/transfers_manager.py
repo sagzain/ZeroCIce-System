@@ -11,15 +11,23 @@ import TrawlNet
 FILE_DIR = './files'
 
 class TransferI(TrawlNet.Transfer):
-    def createPeers(self, files, current):
+    def createPeers(self, files, current=None):
         for file in files:
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file %s does not exist' % file)
-            else:
-                print('El archivo es correcto')
+
+            proxy = self.communicator().propertyToProxy('SenderFactory.Proxy')
+            factoria_sender = TrawlNet.SenderFactoryPrx.checkedCast(proxy)
+
+            sender = factoria_sender.create(file)
+
+            proxy = self.communicator().propertyToProxy('ReceiverFactory.Proxy')
+            factoria_receiver = TrawlNet.ReceiverFactoryPrx.checkedCast(proxy)
+
+            receiver = factoria_receiver.create(file, sender, transfer)
 
 class TransferFactoryI(TrawlNet.TransferFactory):
-    def newTransfer(self, receiverFactory, current):
+    def newTransfer(self, receiverFactory, current=None):
         servant = TransferI()
         proxy = current.adapter.addWithUUID(servant)
 
