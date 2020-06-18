@@ -1,10 +1,14 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+
+import os
 import sys
 import Ice
 import IceStorm
 Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
+
+FILE_DIR = './files'
 
 class SenderI(TrawlNet.Sender):
     def receive(self, size, current=None):
@@ -22,7 +26,7 @@ class SenderFactoryI(TrawlNet.SenderFactory):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file %s does not exist' % file)
 
         servant = SenderI()
-        proxy = current.adaptaer.addWithUUID(servant)
+        proxy = current.adapter.addWithUUID(servant)
 
         print("Petición de descarga: %s" % fileName)
         sys.stdout.flush()
@@ -30,7 +34,29 @@ class SenderFactoryI(TrawlNet.SenderFactory):
         return TrawlNet.SenderPrx.checkedCast(proxy)
 
 class Server(Ice.Application):
-    '''
+    def run(self, args):
+        broker = self.communicator()
+        servant = SenderFactoryI()
+
+        adapter = broker.createObjectAdapter("SenderFactoryAdapter")
+        proxy = adapter.add(servant, broker.stringToIdentity("sender_factory1"))
+
+        print(proxy, flush=True)
+        
+        
+        adapter.activate()
+        self.shutdownOnInterrupt()
+        broker.waitForShutdown()
+
+        topic.unsubscribe(subscriber)
+
+        return 0
+
+sys.exit(Server().main(sys.argv))
+
+'''
+    DISTRIBUCION DE EVENTOS
+
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -41,18 +67,7 @@ class Server(Ice.Application):
             
         print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
-    '''
-
-    def run(self, args):
-        broker = self.communicator()
-        servant = SenderFactoryI()
-
-        adapter = broker.createObjectAdapter("SenderFactoryAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("sender_factory1"))
-
-        print(proxy, flush=True)
-        
-        '''
+-------------------------------------------------------------
         t_manager = self.get_topic_manager()
 
         if not t_manager:
@@ -75,12 +90,3 @@ class Server(Ice.Application):
         topic.subscribeAndGetPublisher(qos, subscriber)
         print("Waiting for events...", subscriber)
         '''
-        adapter.activate()
-        self.shutdownOnInterrupt()
-        broker.waitForShutdown()
-
-        topic.unsubscribe(subscriber)
-
-        return 0
-
-sys.exit(Server().main(sys.argv))

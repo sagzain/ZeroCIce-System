@@ -11,30 +11,65 @@ import TrawlNet
 FILE_DIR = './files'
 
 class TransferI(TrawlNet.Transfer):
+    def __init__(self, receiverFactory, senderFactory):
+        self.receiverFactory = receiverFactory
+        self.senderFactory = senderFactory
+
     def createPeers(self, files, current=None):
+        receiversList = []
+
         for file in files:
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file %s does not exist' % file)
+            
+            print('Archivo valido')
 
-            proxy = self.communicator().propertyToProxy('SenderFactory.Proxy')
-            factoria_sender = TrawlNet.SenderFactoryPrx.checkedCast(proxy)
+            sender = self.senderFactory.create(file)
+            receiver = self.receiverFactory.create(file, sender, None)
 
-            sender = factoria_sender.create(file)
+            receiversList.append(receiver)
+        
+        return receiversList
 
-            proxy = self.communicator().propertyToProxy('ReceiverFactory.Proxy')
-            factoria_receiver = TrawlNet.ReceiverFactoryPrx.checkedCast(proxy)
-
-            receiver = factoria_receiver.create(file, sender, transfer)
 
 class TransferFactoryI(TrawlNet.TransferFactory):
+    def __init__(self, senderFactory):
+        self.senderFactory = senderFactory
+
     def newTransfer(self, receiverFactory, current=None):
-        servant = TransferI()
+        servant = TransferI(receiverFactory, self.senderFactory)
         proxy = current.adapter.addWithUUID(servant)
 
         return TrawlNet.TransferPrx.checkedCast(proxy)
 
 class TransfersManager(Ice.Application):
-    '''
+    def run(self, argv):
+        key = 'SenderFactory.Proxy'
+        proxy2 = self.communicator().propertyToProxy(key)
+        senderFactory = TrawlNet.SenderFactoryPrx.checkedCast(proxy2)
+
+        if not senderFactory:
+            raise RuntimeError('The given proxy is not valid.')
+
+        broker = self.communicator()
+        servant = TransferFactoryI(senderFactory)
+        adapter = broker.createObjectAdapter("TransfersManagerAdapter")
+        proxy = adapter.add(servant, broker.stringToIdentity("transfers_manager1"))
+
+        print(proxy, flush=True)
+        
+        adapter.activate()
+        self.shutdownOnInterrupt()
+        broker.waitForShutdown()
+
+        return 0
+
+sys.exit(TransfersManager().main(sys.argv))
+
+
+'''
+    DISTRIBUCION DE EVENTOS
+
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -45,18 +80,7 @@ class TransfersManager(Ice.Application):
         
         print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
-    '''
-
-    def run(self, argv):
-        broker = self.communicator()
-        servant = TransferFactoryI()
-
-        adapter = broker.createObjectAdapter("TransfersManagerAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("transfers_manager1"))
-
-        print(proxy, flush=True)
-        
-        '''
+------------------------------------------------------------
         t_manager = self.get_topic_manager()
         if not t_manager:
             print("ERROR: Invalid proxy.")
@@ -73,11 +97,3 @@ class TransfersManager(Ice.Application):
         server = TrawlNet.ServerPrx.uncheckedCast(publisher)
 
         server.execute("Hello World")'''
-
-        adapter.activate()
-        self.shutdownOnInterrupt()
-        broker.waitForShutdown()
-
-        return 0
-
-sys.exit(TransfersManager().main(sys.argv))

@@ -50,15 +50,4 @@ module TrawlNet {
   interface TransferEvent {
     void transferFinished(Transfer* transfer);
   };
-
-
-
-  /*------------------------------------------------------------
-     Interfaces para testeo en las primeras etapas del proyecto
-    ------------------------------------------------------------*/
-  
-  interface Server { 
-      void execute(string message);
-  };
-
 };

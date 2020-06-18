@@ -34,15 +34,18 @@ class Client(Ice.Application):
         if len(argv) < 2:
             raise RuntimeError('At least a file has to be given.')
 
-        
         broker = self.communicator()
         servant = ReceiverFactoryI()
-
         adapter = broker.createObjectAdapter("ReceiverFactoryAdapter")
         proxy2 = adapter.add(servant, broker.stringToIdentity("receiver_factory1"))
-        
+
+        print(proxy2, flush=True)
+
+        adapter.activate()
+
+        #Conectarse con transfer_manager
         transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
-        transfer.createPeers(argv[1:])
+        receiver_list = transfer.createPeers(argv[1:])
 
         return 0
 
