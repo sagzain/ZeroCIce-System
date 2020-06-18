@@ -24,6 +24,7 @@ class ReceiverFactoryI(TrawlNet.ReceiverFactory):
 
 class Client(Ice.Application):
     def run(self, argv):
+        #Creamos el objeto factoria de transfers para realizar las llamadas remotas
         key = 'TransfersManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
         factoria_transfer = TrawlNet.TransferFactoryPrx.checkedCast(proxy)
@@ -34,18 +35,21 @@ class Client(Ice.Application):
         if len(argv) < 2:
             raise RuntimeError('At least a file has to be given.')
 
+        #Crear el adaptador y activarlo para hacer uso del factory receiver
         broker = self.communicator()
         servant = ReceiverFactoryI()
         adapter = broker.createObjectAdapter("ReceiverFactoryAdapter")
         proxy2 = adapter.add(servant, broker.stringToIdentity("receiver_factory1"))
 
-        print(proxy2, flush=True)
-
         adapter.activate()
 
-        #Conectarse con transfer_manager
+        #Realizar llamada remota a transfer_manager para crear el objeto transfer
         transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
+        
+        #Usar el objeto transfer para crear las Peers
         receiver_list = transfer.createPeers(argv[1:])
+
+        print(receiver_list)
 
         return 0
 

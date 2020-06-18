@@ -20,7 +20,7 @@ class TransferI(TrawlNet.Transfer):
 
         for file in files:
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
-                raise TrawlNet.FileDoesNotExistError('ERROR: The file %s does not exist' % file)
+                raise TrawlNet.FileDoesNotExistError('ERROR: The file \'%s\' does not exist' % file)
             
             print('Archivo valido')
 
