@@ -11,8 +11,13 @@ import TrawlNet
 FILE_DIR = './files'
 
 class SenderI(TrawlNet.Sender):
+    def __init__(self, fileName):
+        self.fileName = fileName
+
     def receive(self, size, current=None):
-        return ('Tamaño de descarga:', size)
+        with open("welcome.txt") as file: # Use file to refer to the file object
+            data = file.read()
+        return data
 
     def close(self, current=None):
         print('Cerrando archivo')
@@ -25,10 +30,10 @@ class SenderFactoryI(TrawlNet.SenderFactory):
         if not os.path.isfile(os.path.join(FILE_DIR, fileName)):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file \'%s\' does not exist' % file)
 
-        servant = SenderI()
+        servant = SenderI(fileName)
         proxy = current.adapter.addWithUUID(servant)
 
-        print("Petición de descarga: %s" % fileName)
+        print('Creado sender para descarga del archivo \'%s\'' % fileName)
         sys.stdout.flush()
 
         return TrawlNet.SenderPrx.checkedCast(proxy)

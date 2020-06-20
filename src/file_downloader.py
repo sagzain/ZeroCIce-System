@@ -7,18 +7,24 @@ Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
 
 class ReceiverI(TrawlNet.Receiver):
+    def __init__(self, fileName, sender, transfer):
+        self.fileName = fileName
+        self.sender = sender
+        self.transfer = transfer
+
     def start(self, current=None):
-        print('Iniciando')
+        print('Iniciando transferencia de fichero \'%s\'' % fileName)
+        
 
     def destroy(self, current=None):
         print('Eliminando')
 
 class ReceiverFactoryI(TrawlNet.ReceiverFactory):
     def create(self, fileName, sender, transfer, current=None):
-        servant = ReceiverI()
+        servant = ReceiverI(fileName, sender, transfer)
         proxy = current.adapter.addWithUUID(servant)
 
-        print('Creando receiver')
+        print('Creado receiver para descarga del archivo \'%s\'' % fileName)
 
         return TrawlNet.ReceiverPrx.checkedCast(proxy)
 
@@ -49,7 +55,8 @@ class Client(Ice.Application):
         #Usar el objeto transfer para crear las Peers
         receiver_list = transfer.createPeers(argv[1:])
 
-        print(receiver_list)
+        for receiver in receiver_list:
+            receiver.start()
 
         return 0
 

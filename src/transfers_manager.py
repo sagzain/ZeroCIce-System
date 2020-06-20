@@ -14,6 +14,7 @@ class TransferI(TrawlNet.Transfer):
     def __init__(self, receiverFactory, senderFactory):
         self.receiverFactory = receiverFactory
         self.senderFactory = senderFactory
+        self.transfer = None
 
     def createPeers(self, files, current=None):
         receiversList = []
@@ -25,10 +26,11 @@ class TransferI(TrawlNet.Transfer):
             print('Archivo valido')
 
             sender = self.senderFactory.create(file)
-            receiver = self.receiverFactory.create(file, sender, None)
+            receiver = self.receiverFactory.create(file, sender, self.transfer)
 
             receiversList.append(receiver)
         
+        print('Creadas parejas sender-receiver')
         return receiversList
 
 
@@ -40,7 +42,10 @@ class TransferFactoryI(TrawlNet.TransferFactory):
         servant = TransferI(receiverFactory, self.senderFactory)
         proxy = current.adapter.addWithUUID(servant)
 
-        return TrawlNet.TransferPrx.checkedCast(proxy)
+        transfer = TrawlNet.TransferPrx.checkedCast(proxy)
+        servant.transfer = transfer
+
+        return transfer
 
 class TransfersManager(Ice.Application):
     def run(self, argv):
