@@ -1,10 +1,28 @@
 # zeroC-system
+
 Sistema cliente-servidor que permite la descarga de ficheros mediante el uso de ZeroC Ice - Sistemas Distribuidos - UCLM.
 
 ## Autor y Enlace
+
 https://github.com/Samuglz6/file-downloader-system
 
 Samuel González Linde
+
+## Introduccion
+
+El objetivo principal del proyecto es diseñar un sistema cliente-servidor que permita la descarga
+de ficheros. La implementación de este proyecto permitirá al alumno trabajar, mediante ZeroC
+Ice, los siguientes aspectos:
+- Transparencia de localización
+- Manejo de canales de eventos
+- Despliegue de servidores
+
+## Arquitectura del proyecto
+
+El sistema estará formado por cinco tipos de componentes: senders, encargados del envío de
+ficheros; transfers, para la gestión de la transferencia de cada archivo; receivers, empleados para la
+recepción de archivos; clientes, que solicitarán ficheros; y canales de eventos para la comunicación
+de estados entre componentes.
 
 ## Ejecución
 
@@ -77,4 +95,8 @@ Una vez creado el objeto transfer se inicia la creacion de los senders en el lad
 
 Cuando todas las parejas estan creadas se inicia la transferencia del archivo (el cual debe existir en la [carpeta de archivos](/files)), el sender envía el contenido del archivo y el receiver es encargado de almacenarlo en la [carpeta de descargas](/downloads).
 
+## Referencias
 
+- [Enunciado del proyecto](/doc/enunciado.pdf)
+- [Manual de ZeroCIce](/doc/ice-manual.pdf)
+- [Ice 3.7 Slice API Reference](https://doc.zeroc.com/api/ice/3.7/slice/)
