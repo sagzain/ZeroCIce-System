@@ -55,8 +55,6 @@ class Server(Ice.Application):
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
-        topic.unsubscribe(subscriber)
-
         return 0
 
 sys.exit(Server().main(sys.argv))
@@ -96,4 +94,6 @@ sys.exit(Server().main(sys.argv))
 
         topic.subscribeAndGetPublisher(qos, subscriber)
         print("Waiting for events...", subscriber)
+
+        topic.unsubscribe(subscriber)
         '''
