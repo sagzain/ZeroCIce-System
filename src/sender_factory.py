@@ -13,14 +13,16 @@ FILE_DIR = './files'
 class SenderI(TrawlNet.Sender):
     def __init__(self, fileName):
         self.fileName = fileName
+        self.file = None
 
     def receive(self, size, current=None):
-        with open("welcome.txt") as file: # Use file to refer to the file object
-            data = file.read()
+        with open(os.path.join(FILE_DIR, self.fileName)) as file: # Use file to refer to the file object
+            self.file = file
+            data = self.file.read()
         return data
 
     def close(self, current=None):
-        print('Cerrando archivo')
+        self.file.close()
 
     def destroy(self, current=None):
         print('Eliminando sender')

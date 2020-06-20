@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import Ice
 Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
+
+DOWNLOAD_DIR = './downloads'
 
 class ReceiverI(TrawlNet.Receiver):
     def __init__(self, fileName, sender, transfer):
@@ -13,9 +16,16 @@ class ReceiverI(TrawlNet.Receiver):
         self.transfer = transfer
 
     def start(self, current=None):
-        print('Iniciando transferencia de fichero \'%s\'' % fileName)
-        
+        print('Iniciando transferencia de fichero \'%s\'' % self.fileName)
+        data = self.sender.receive(1)
+        self.sender.close()
 
+        with open(os.path.join(DOWNLOAD_DIR,self.fileName), "w+") as file:
+            file.write(data)
+        
+        print('Finalizada transferencia de fichero.')
+        
+        
     def destroy(self, current=None):
         print('Eliminando')
 
