@@ -98,5 +98,5 @@ Cuando todas las parejas estan creadas se inicia la transferencia del archivo (e
 ## Referencias
 
 - [Enunciado del proyecto](/doc/enunciado.pdf)
-- [Manual de ZeroCIce](/doc/ice-manual.pdf)
+- Manual de ZeroCIce de Moodle UCLM
 - [Ice 3.7 Slice API Reference](https://doc.zeroc.com/api/ice/3.7/slice/)
