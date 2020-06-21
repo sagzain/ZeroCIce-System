@@ -26,6 +26,10 @@ class SenderI(TrawlNet.Sender):
 
     def destroy(self, current=None):
         print('Eliminando sender')
+        try:
+            current.adapter.remove(current.id)
+        except Exception as e:
+            print(e, flush=True)
 
 class SenderFactoryI(TrawlNet.SenderFactory):
     def create(self, fileName, current=None):

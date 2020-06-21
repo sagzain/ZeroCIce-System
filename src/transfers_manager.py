@@ -31,6 +31,19 @@ class TransferI(TrawlNet.Transfer):
         print('Creadas parejas sender-receiver')
         return receiversList
 
+    def destroyPeer(self, peerId, current=None):
+        print('Eliminando pareja de peers')
+        proxy = peerId + ' @ ReceiverFactoryAdapter1'
+        receiver = TrawlNet.ReceiverPrx.checkedCast(current.adapter.getCommunicator().stringToProxy(proxy)) 
+        receiver.destroy()
+
+    def destroy(self, current=None):
+        print('Eliminando transfer')
+
+        try:
+            current.adapter.remove(current.id)
+        except Exception as e:
+            print(e, flush=True)
 
 class TransferFactoryI(TrawlNet.TransferFactory):
     def __init__(self, senderFactory):

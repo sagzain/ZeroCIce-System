@@ -24,10 +24,20 @@ class ReceiverI(TrawlNet.Receiver):
             file.write(data)
         
         print('Finalizada transferencia de fichero.')
-        
-        
+
+        self.transfer.destroyPeer(str(current.id.name))
+        self.transfer.destroy()
+
+
     def destroy(self, current=None):
-        print('Eliminando')
+        print('Eliminando receiver')
+
+        self.sender.destroy()
+
+        try:
+            current.adapter.remove(current.id)
+        except Exception as e:
+            print(e, flush=True)
 
 class ReceiverFactoryI(TrawlNet.ReceiverFactory):
     def create(self, fileName, sender, transfer, current=None):
@@ -67,7 +77,7 @@ class Client(Ice.Application):
 
         for receiver in receiver_list:
             receiver.start()
-
+        
         return 0
 
 sys.exit(Client().main(sys.argv))
