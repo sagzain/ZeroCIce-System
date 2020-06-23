@@ -17,7 +17,7 @@ class ReceiverI(TrawlNet.Receiver):
 
     def start(self, current=None):
         print('Iniciando transferencia de fichero \'%s\'' % self.fileName)
-        data = self.sender.receive(1)
+        data = self.sender.receive(1)      
         self.sender.close()
 
         with open(os.path.join(DOWNLOAD_DIR,self.fileName), "w+") as file:
@@ -26,7 +26,6 @@ class ReceiverI(TrawlNet.Receiver):
         print('Finalizada transferencia de fichero.')
 
         self.transfer.destroyPeer(str(current.id.name))
-        self.transfer.destroy()
 
 
     def destroy(self, current=None):
@@ -71,13 +70,15 @@ class Client(Ice.Application):
 
         #Realizar llamada remota a transfer_manager para crear el objeto transfer
         transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
-        
+
         #Usar el objeto transfer para crear las Peers
         receiver_list = transfer.createPeers(argv[1:])
 
         for receiver in receiver_list:
             receiver.start()
-        
+            
+        transfer.destroy()
+
         return 0
 
 sys.exit(Client().main(sys.argv))
