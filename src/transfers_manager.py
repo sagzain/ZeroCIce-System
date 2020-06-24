@@ -18,10 +18,13 @@ class TransferI(TrawlNet.Transfer):
 
     def createPeers(self, files, current=None):
         receiversList = []
+       
+        if set([file for file in files if files.count(file) > 1]):
+            raise RuntimeError('Se está intentando descargar varias veces un mismo archivo.')
 
         for file in files:
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
-                raise TrawlNet.FileDoesNotExistError('ERROR: The file \'%s\' does not exist' % file)
+                raise TrawlNet.FileDoesNotExistError('El archivo \'%s\' no existe en el directorio' % file)
 
             sender = self.senderFactory.create(file)
             receiver = self.receiverFactory.create(file, sender, self.transfer)
