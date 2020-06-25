@@ -3,6 +3,7 @@
 
 import os
 import sys
+import binascii
 import Ice
 import IceStorm
 Ice.loadSlice('./src/trawlnet.ice')
@@ -13,12 +14,11 @@ FILE_DIR = './files'
 class SenderI(TrawlNet.Sender):
     def __init__(self, fileName):
         self.fileName = fileName
-        self.file = None
+        self.file = open(os.path.join(FILE_DIR, self.fileName),'rb')
 
     def receive(self, size, current=None):
-        with open(os.path.join(FILE_DIR, self.fileName)) as file: # Use file to refer to the file object
-            self.file = file
-            data = self.file.read()
+        data = str(binascii.b2a_base64(self.file.read(size),newline=False))
+        
         return data
 
     def close(self, current=None):

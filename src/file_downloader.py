@@ -3,10 +3,12 @@
 
 import os
 import sys
+import binascii
 import Ice
 Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
 
+BLOCK_SIZE = 1024
 DOWNLOAD_DIR = './downloads'
 
 class ReceiverI(TrawlNet.Receiver):
@@ -17,12 +19,12 @@ class ReceiverI(TrawlNet.Receiver):
 
     def start(self, current=None):
         print('Iniciando transferencia de fichero \'%s\'' % self.fileName)
-        data = self.sender.receive(1)      
-        self.sender.close()
+        data = binascii.a2b_base64(self.sender.receive(BLOCK_SIZE)[1:])
 
-        with open(os.path.join(DOWNLOAD_DIR,self.fileName), "w+") as file:
+        with open(os.path.join(DOWNLOAD_DIR,self.fileName), "wb") as file:
             file.write(data)
-        
+
+        self.sender.close()
         print('Finalizada transferencia de fichero.')
 
         self.transfer.destroyPeer(str(current.id.name))

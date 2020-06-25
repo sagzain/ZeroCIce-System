@@ -1,1 +1,23 @@
-Hello World
+The following are the graphical (non-control) characters defined by
+ISO 8859-1 (1987).  Descriptions in words aren't all that helpful,
+but they're the best we can do in text.  A graphics file illustrating
+the character set should be available from the same archive as this
+file.
+
+Hex Description                 Hex Description
+
+20  SPACE
+21  EXCLAMATION MARK            A1  INVERTED EXCLAMATION MARK
+22  QUOTATION MARK              A2  CENT SIGN
+23  NUMBER SIGN                 A3  POUND SIGN
+24  DOLLAR SIGN                 A4  CURRENCY SIGN
+25  PERCENT SIGN                A5  YEN SIGN
+26  AMPERSAND                   A6  BROKEN BAR
+27  APOSTROPHE                  A7  SECTION SIGN
+28  LEFT PARENTHESIS            A8  DIAERESIS
+29  RIGHT PARENTHESIS           A9  COPYRIGHT SIGN
+2A  ASTERISK                    AA  FEMININE ORDINAL INDICATOR
+2B  PLUS SIGN                   AB  LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+2C  COMMA                       AC  NOT SIGN
+2D  HYPHEN-MINUS                AD  SOFT HYPHEN
+2E  FULL
