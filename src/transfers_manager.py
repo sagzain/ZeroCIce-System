@@ -10,6 +10,10 @@ import TrawlNet
 
 FILE_DIR = './files'
 
+class PeerEventI(TrawlNet.PeerEvent):
+    def peerFinished(self, current=None):
+        print('[EVENTO] La peer ha finalizado.')
+
 class TransferI(TrawlNet.Transfer):
     def __init__(self, receiverFactory, senderFactory):
         self.receiverFactory = receiverFactory
@@ -59,9 +63,19 @@ class TransferFactoryI(TrawlNet.TransferFactory):
         transfer = TrawlNet.TransferPrx.checkedCast(proxy)
         servant.transfer = transfer
 
-        return transfer
+        return transfer    
 
 class TransfersManager(Ice.Application):
+    def get_topic_manager(self):
+        key = 'IceStorm.TopicManager.Proxy'
+        proxy = self.communicator().propertyToProxy(key)
+        if proxy is None:
+            raise RuntimeError('La propiedad \'%s\' no está definida' % key)
+
+        print('Ejecutando IceStorm en: \'%s\'' % key)
+        
+        return IceStorm.TopicManagerPrx.checkedCast(proxy)
+
     def run(self, argv):
         key = 'SenderFactory.Proxy'
         proxy2 = self.communicator().propertyToProxy(key)
@@ -76,43 +90,34 @@ class TransfersManager(Ice.Application):
         proxy = adapter.add(servant, broker.stringToIdentity("transfers_manager1"))
 
         print(proxy, flush=True)
-        
+
         adapter.activate()
+
+        #Subscripción a los eventos de PeerEvent
+        topic_manager = self.get_topic_manager()
+        if not topic_manager:
+            raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
+        
+        ic = self.communicator()
+        servant_event = PeerEventI()
+        adapter_event = ic.createObjectAdapter('PeerEventAdapter')
+        subscriber = adapter_event.addWithUUID(servant_event)
+        
+        topic_name = 'PeerEventTopic'
+        qos = {}
+        try:
+            topic = topic_manager.retrieve(topic_name)
+        except IceStorm.NoSuchTopic:
+            topic = topic_manager.create(topic_name)
+        
+        topic.subscribeAndGetPublisher(qos, subscriber)
+
+        adapter_event.activate()
         self.shutdownOnInterrupt()
-        broker.waitForShutdown()
+        ic.waitForShutdown()
+
+        topic.unsubscribe(subscriber)
 
         return 0
 
 sys.exit(TransfersManager().main(sys.argv))
-
-
-'''
-    DISTRIBUCION DE EVENTOS
-
-    def get_topic_manager(self):
-        key = 'IceStorm.TopicManager.Proxy'
-        proxy = self.communicator().propertyToProxy(key)
-        
-        if proxy is None:
-            print("ERROR: Property", key, "not set")
-            return None
-        
-        print("Using IceStorm in: '%s'" % key)
-        return IceStorm.TopicManagerPrx.checkedCast(proxy)
-------------------------------------------------------------
-        t_manager = self.get_topic_manager()
-        if not t_manager:
-            print("ERROR: Invalid proxy.")
-            return 2
-
-        t_name = "ServerTopic"
-        try:
-            topic = t_manager.retrieve(t_name)
-        except IceStorm.NoSuchTopic:
-            print("Topic not found, creating...")
-            topic = t_manager.create(t_name)
-
-        publisher = topic.getPublisher()
-        server = TrawlNet.ServerPrx.uncheckedCast(publisher)
-
-        server.execute("Hello World")'''
