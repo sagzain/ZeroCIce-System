@@ -37,7 +37,7 @@ class SenderFactoryI(TrawlNet.SenderFactory):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file \'%s\' does not exist' % file)
 
         servant = SenderI(fileName)
-        proxy = current.adapter.addWithUUID(servant)
+        proxy = current.adapter.add(servant, current.adapter.getCommunicator().stringToIdentity(fileName))
 
         print('Creado sender para descarga del archivo \'%s\'' % fileName)
         sys.stdout.flush()

@@ -13,12 +13,14 @@ BLOCK_SIZE = 1024
 DOWNLOAD_DIR = './downloads'
 
 class TransferEventI(TrawlNet.TransferEvent):
-    def __init__(self, transfer):
+    def __init__(self, transfer, communicator):
         self.transfer = transfer
+        self.communicator = communicator
 
     def transferFinished(self, transfer, current=None):
         if(transfer == self.transfer):
             print('[EVENTO] El transfer \'%s\' ha finalizado' % transfer)
+            transfer.destroy()
 
 class ReceiverI(TrawlNet.Receiver):
     def __init__(self, fileName, sender, transfer):
@@ -37,11 +39,28 @@ class ReceiverI(TrawlNet.Receiver):
 
         print('Finalizada transferencia de fichero.')
 
+        key = 'IceStorm.TopicManager.Proxy'
+        proxy = current.adapter.getCommunicator().propertyToProxy(key)
+        if proxy is None:
+            raise RuntimeError('La propiedad \'%s\' no está definida' % key)
+        
+        topic_manager = IceStorm.TopicManagerPrx.checkedCast(proxy)
+        if not topic_manager:
+            raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
+        
+        topic_name = "PeerEvent"
+        try:
+            topic = topic_manager.retrieve(topic_name)
+        except IceStorm.NoSuchTopic:
+            topic = topic_manager.create(topic_name)
+        
+        publisher = topic.getPublisher()
+        event = TrawlNet.PeerEventPrx.uncheckedCast(publisher)
+
+        event.peerFinished(TrawlNet.PeerInfo(transfer=self.transfer, fileName=self.fileName))
 
     def destroy(self, current=None):
-        print('Eliminando receiver')
-
-        self.sender.destroy()
+        print('Eliminando receiver para \'%s\'' % current.id.name)
 
         try:
             current.adapter.remove(current.id)
@@ -51,7 +70,7 @@ class ReceiverI(TrawlNet.Receiver):
 class ReceiverFactoryI(TrawlNet.ReceiverFactory):
     def create(self, fileName, sender, transfer, current=None):
         servant = ReceiverI(fileName, sender, transfer)
-        proxy = current.adapter.addWithUUID(servant)
+        proxy = current.adapter.add(servant, current.adapter.getCommunicator().stringToIdentity(fileName))
 
         print('Creado receiver para descarga del archivo \'%s\'' % fileName)
 
@@ -90,21 +109,6 @@ class Client(Ice.Application):
 
         adapter.activate()
 
-        #Cuando acaba la transferencia del archivo con una de las peers, enviamos el evento
-        topic_manager = self.get_topic_manager()
-
-        if not topic_manager:
-            raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
-        
-        peer_topic_name = 'PeerEvent'
-        try:
-            peer_topic = topic_manager.retrieve(peer_topic_name)
-        except IceStorm.NoSuchTopic:
-            peer_topic = topic_manager.create(peer_topic_name)
-        
-        publisher = peer_topic.getPublisher()
-        peer_event = TrawlNet.PeerEventPrx.uncheckedCast(publisher)
-
         #Realizar llamada remota a transfer_manager para crear el objeto transfer
         transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
 
@@ -115,7 +119,12 @@ class Client(Ice.Application):
         receiver_list = transfer.createPeers(TrawlNet.FileList)
         
         #Nos subscribimos a los eventos de TransferEvent y activacion del adaptador
-        servant_event = TransferEventI(transfer)
+        topic_manager = self.get_topic_manager()
+
+        if not topic_manager:
+            raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
+
+        servant_event = TransferEventI(transfer,broker)
         adapter_event = broker.createObjectAdapter('TransferEventAdapter')
         subscriber = adapter_event.addWithUUID(servant_event)
         
@@ -133,7 +142,7 @@ class Client(Ice.Application):
         #Una vez tenemos las peers creadas procedemos a realizar las transferencias correspondientes
         for receiver in range(len(receiver_list)):
             receiver_list[receiver].start()
-            peer_event.peerFinished(TrawlNet.PeerInfo(transfer, TrawlNet.FileList[receiver]))
+            #peer_event.peerFinished(TrawlNet.PeerInfo(transfer, TrawlNet.FileList[receiver]))
 
         transfer.destroy()
 

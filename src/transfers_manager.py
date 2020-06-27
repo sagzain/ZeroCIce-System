@@ -12,28 +12,8 @@ FILE_DIR = './files'
 
 class PeerEventI(TrawlNet.PeerEvent):
     def peerFinished(self, peerInfo, current=None):
-        print('[EVENTO] La peer \'%s\' del transfer \'%s\'ha finalizado.' % (peerInfo.fileName, peerInfo.transfer))
+        print('[EVENTO] La peer con \'%s\' del transfer \'%s\'ha finalizado.' % (peerInfo.fileName, peerInfo.transfer))
         peerInfo.transfer.destroyPeer(peerInfo.fileName)
-
-        key = 'IceStorm.TopicManager.Proxy'
-        proxy = current.adapter.getCommunicator().propertyToProxy(key)
-        if proxy is None:
-            raise RuntimeError('La propiedad \'%s\' no está definida' % key)
-        
-        topic_manager = IceStorm.TopicManagerPrx.checkedCast(proxy)
-        if not topic_manager:
-            raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
-        
-        topic_name = "TransferEvent"
-        try:
-            topic = topic_manager.retrieve(topic_name)
-        except IceStorm.NoSuchTopic:
-            topic = topic_manager.create(topic_name)
-        
-        publisher = topic.getPublisher()
-        event = TrawlNet.TransferEventPrx.uncheckedCast(publisher)
-
-        event.transferFinished(peerInfo.transfer)
 
 class TransferI(TrawlNet.Transfer):
     def __init__(self, receiverFactory, senderFactory):
@@ -42,7 +22,7 @@ class TransferI(TrawlNet.Transfer):
         self.transfer = None
 
     def createPeers(self, files, current=None):
-        receiversList = []
+        TrawlNet.receiversList = []
        
         if set([file for file in files if files.count(file) > 1]):
             raise RuntimeError('Se está intentando descargar varias veces un mismo archivo.')
@@ -54,17 +34,45 @@ class TransferI(TrawlNet.Transfer):
             sender = self.senderFactory.create(file)
             receiver = self.receiverFactory.create(file, sender, self.transfer)
 
-            receiversList.append(receiver)
+            TrawlNet.receiversList.append(receiver)
         
         print('Creadas parejas sender-receiver')
-        return receiversList
+        return TrawlNet.receiversList
 
     def destroyPeer(self, peerId, current=None):
-        print('Eliminando pareja de peers')
+        print('Eliminando pareja sender-receiver de \'%s\'' % peerId)
         
-        '''proxy = peerId + ' @ ReceiverFactoryAdapter1'
+        proxy = peerId + ' @ ReceiverFactoryAdapter1'
+        proxy2 = peerId + ' @ SenderFactoryAdapter1'
+
+        sender = TrawlNet.SenderPrx.checkedCast(current.adapter.getCommunicator().stringToProxy(proxy2))
+        sender.destroy()
+        
         receiver = TrawlNet.ReceiverPrx.checkedCast(current.adapter.getCommunicator().stringToProxy(proxy)) 
-        receiver.destroy()'''
+        receiver.destroy()
+
+        TrawlNet.receiversList.remove(receiver)
+
+        if not TrawlNet.receiversList:
+            key = 'IceStorm.TopicManager.Proxy'
+            proxy = current.adapter.getCommunicator().propertyToProxy(key)
+            if proxy is None:
+                raise RuntimeError('La propiedad \'%s\' no está definida' % key)
+            
+            topic_manager = IceStorm.TopicManagerPrx.checkedCast(proxy)
+            if not topic_manager:
+                raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
+            
+            topic_name = "TransferEvent"
+            try:
+                topic = topic_manager.retrieve(topic_name)
+            except IceStorm.NoSuchTopic:
+                topic = topic_manager.create(topic_name)
+            
+            publisher = topic.getPublisher()
+            event = TrawlNet.TransferEventPrx.uncheckedCast(publisher)
+
+            event.transferFinished(self.transfer)
 
     def destroy(self, current=None):
         print('Eliminando transfer')
