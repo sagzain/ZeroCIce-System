@@ -5,7 +5,6 @@ import os
 import sys
 import binascii
 import Ice
-import IceStorm
 Ice.loadSlice('./src/trawlnet.ice')
 import TrawlNet
 

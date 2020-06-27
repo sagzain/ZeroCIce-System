@@ -15,12 +15,12 @@ DOWNLOAD_DIR = './downloads'
 class TransferEventI(TrawlNet.TransferEvent):
     def __init__(self, transfer, communicator):
         self.transfer = transfer
-        self.communicator = communicator
 
     def transferFinished(self, transfer, current=None):
         if(transfer == self.transfer):
             print('[EVENTO] El transfer \'%s\' ha finalizado' % transfer)
             transfer.destroy()
+            current.adapter.deactivate()
 
 class ReceiverI(TrawlNet.Receiver):
     def __init__(self, fileName, sender, transfer):
@@ -39,6 +39,7 @@ class ReceiverI(TrawlNet.Receiver):
 
         print('Finalizada transferencia de fichero.')
 
+        #Preparamos todo lo necesario para utilizar el canal de eventos con el topico PeerEvent
         key = 'IceStorm.TopicManager.Proxy'
         proxy = current.adapter.getCommunicator().propertyToProxy(key)
         if proxy is None:
@@ -57,10 +58,11 @@ class ReceiverI(TrawlNet.Receiver):
         publisher = topic.getPublisher()
         event = TrawlNet.PeerEventPrx.uncheckedCast(publisher)
 
+        #Publicamos en el canal de eventos de PeerEvent que ha terminado esta peer
         event.peerFinished(TrawlNet.PeerInfo(transfer=self.transfer, fileName=self.fileName))
 
     def destroy(self, current=None):
-        print('Eliminando receiver para \'%s\'' % current.id.name)
+        print('Eliminando receiver de \'%s\'' % current.id.name)
 
         try:
             current.adapter.remove(current.id)
@@ -142,12 +144,11 @@ class Client(Ice.Application):
         #Una vez tenemos las peers creadas procedemos a realizar las transferencias correspondientes
         for receiver in range(len(receiver_list)):
             receiver_list[receiver].start()
-            #peer_event.peerFinished(TrawlNet.PeerInfo(transfer, TrawlNet.FileList[receiver]))
-
-        transfer.destroy()
 
         self.shutdownOnInterrupt()
-        broker.waitForShutdown()
+        adapter_event.waitForDeactivate()
+
+        print('\n-Se ha finalizado con exito la ejecución-')
 
         transfer_topic.unsubscribe(subscriber)
 

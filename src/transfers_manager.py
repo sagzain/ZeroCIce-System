@@ -31,6 +31,7 @@ class TransferI(TrawlNet.Transfer):
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
                 raise TrawlNet.FileDoesNotExistError('El archivo \'%s\' no existe en el directorio' % file)
 
+        for file in files:
             sender = self.senderFactory.create(file)
             receiver = self.receiverFactory.create(file, sender, self.transfer)
 
