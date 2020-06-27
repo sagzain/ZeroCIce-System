@@ -142,8 +142,8 @@ class Client(Ice.Application):
         adapter_event.activate()
 
         #Una vez tenemos las peers creadas procedemos a realizar las transferencias correspondientes
-        for receiver in range(len(receiver_list)):
-            receiver_list[receiver].start()
+        for receiver in receiver_list:
+            receiver.start()
 
         self.shutdownOnInterrupt()
         adapter_event.waitForDeactivate()
