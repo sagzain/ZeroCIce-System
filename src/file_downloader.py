@@ -13,9 +13,12 @@ BLOCK_SIZE = 1024
 DOWNLOAD_DIR = './downloads'
 
 class TransferEventI(TrawlNet.TransferEvent):
+    def __init__(self, transfer):
+        self.transfer = transfer
+
     def transferFinished(self, transfer, current=None):
-        print('[EVENTO] El transfer \'%s\'ha finalizado' % self.transfer)
-        self.transfer.destroy()
+        if(transfer == self.transfer):
+            print('[EVENTO] El transfer \'%s\' ha finalizado' % transfer)
 
 class ReceiverI(TrawlNet.Receiver):
     def __init__(self, fileName, sender, transfer):
@@ -33,8 +36,6 @@ class ReceiverI(TrawlNet.Receiver):
         self.sender.close()
 
         print('Finalizada transferencia de fichero.')
-
-        #self.transfer.destroyPeer(str(current.id.name))
 
 
     def destroy(self, current=None):
@@ -95,7 +96,7 @@ class Client(Ice.Application):
         if not topic_manager:
             raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
         
-        peer_topic_name = 'PeerEventTopic'
+        peer_topic_name = 'PeerEvent'
         try:
             peer_topic = topic_manager.retrieve(peer_topic_name)
         except IceStorm.NoSuchTopic:
@@ -104,12 +105,21 @@ class Client(Ice.Application):
         publisher = peer_topic.getPublisher()
         peer_event = TrawlNet.PeerEventPrx.uncheckedCast(publisher)
 
-        #Subscripción a los eventos de TransferEvent y activacion del adaptador
-        servant_event = TransferEventI()
+        #Realizar llamada remota a transfer_manager para crear el objeto transfer
+        transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
+
+        #Utilizamos la variable contenida en TrawlNet que consiste en una secuencia de Strings
+        TrawlNet.FileList = argv[1:]
+
+        #Usar el objeto transfer para crear las Peers
+        receiver_list = transfer.createPeers(TrawlNet.FileList)
+        
+        #Nos subscribimos a los eventos de TransferEvent y activacion del adaptador
+        servant_event = TransferEventI(transfer)
         adapter_event = broker.createObjectAdapter('TransferEventAdapter')
         subscriber = adapter_event.addWithUUID(servant_event)
         
-        transfer_topic_name = 'TransferEventTopic'
+        transfer_topic_name = 'TransferEvent'
         qos = {}
         try:
             transfer_topic = topic_manager.retrieve(transfer_topic_name)
@@ -120,19 +130,15 @@ class Client(Ice.Application):
 
         adapter_event.activate()
 
-        #Realizar llamada remota a transfer_manager para crear el objeto transfer
-        transfer = factoria_transfer.newTransfer(TrawlNet.ReceiverFactoryPrx.checkedCast(proxy2))
-
-        #Usar el objeto transfer para crear las Peers
-        receiver_list = transfer.createPeers(argv[1:])
-
         #Una vez tenemos las peers creadas procedemos a realizar las transferencias correspondientes
-        for receiver in receiver_list:
-            receiver.start()
-            peer_event.peerFinished()
+        for receiver in range(len(receiver_list)):
+            receiver_list[receiver].start()
+            peer_event.peerFinished(TrawlNet.PeerInfo(transfer, TrawlNet.FileList[receiver]))
 
-        #self.shutdownOnInterrupt()
-        #broker.waitForShutdown()
+        transfer.destroy()
+
+        self.shutdownOnInterrupt()
+        broker.waitForShutdown()
 
         transfer_topic.unsubscribe(subscriber)
 

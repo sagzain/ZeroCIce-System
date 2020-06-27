@@ -44,8 +44,7 @@ module TrawlNet {
   };
 
   interface PeerEvent {
-    void peerFinished();
-    //PeerInfo peerInfo
+    void peerFinished(PeerInfo peerInfo);
   };
 
   interface TransferEvent {
