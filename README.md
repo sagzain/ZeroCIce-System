@@ -4,7 +4,7 @@ Sistema cliente-servidor que permite la descarga de ficheros mediante el uso de 
 
 ## Autor y Enlace
 
-https://github.com/Samuglz6/file-downloader-system
+https://github.com/Samuglz6/ZeroC-system
 
 Samuel González Linde
 
