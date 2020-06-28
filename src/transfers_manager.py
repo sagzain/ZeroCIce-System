@@ -24,17 +24,21 @@ class TransferI(TrawlNet.Transfer):
     def createPeers(self, files, current=None):
         TrawlNet.receiversList = []
        
+        #Comprobamos que no se ha repetido el nombre de ningun archivo
         if set([file for file in files if files.count(file) > 1]):
             raise RuntimeError('Se está intentando descargar varias veces un mismo archivo.')
 
+        #Comprobamos que todos los archivos que se han indicado existen en el directorio
         for file in files:
             if not os.path.isfile(os.path.join(FILE_DIR, file)):
                 raise TrawlNet.FileDoesNotExistError('El archivo \'%s\' no existe en el directorio' % file)
 
+        #Creamos la pareja sender-receiver para cada archivo
         for file in files:
             sender = self.senderFactory.create(file)
             receiver = self.receiverFactory.create(file, sender, self.transfer)
 
+            #Almacenamos los receivers en la lista definida en TrawlNet
             TrawlNet.receiversList.append(receiver)
         
         print('Creadas parejas sender-receiver')
@@ -42,18 +46,23 @@ class TransferI(TrawlNet.Transfer):
 
     def destroyPeer(self, peerId, current=None):
         print('Eliminando pareja sender-receiver de \'%s\'' % peerId)
-        
+
+        #Definimos los proxies para la destruccion de las peers        
         proxy = peerId + ' @ ReceiverFactoryAdapter1'
         proxy2 = peerId + ' @ SenderFactoryAdapter1'
 
+        #Destruimos el sender indicado
         sender = TrawlNet.SenderPrx.checkedCast(current.adapter.getCommunicator().stringToProxy(proxy2))
         sender.destroy()
         
+        #Destruimos el receiver indicado
         receiver = TrawlNet.ReceiverPrx.checkedCast(current.adapter.getCommunicator().stringToProxy(proxy)) 
         receiver.destroy()
 
+        #Vamos eliminando los receivers que ya no existen de la lista de receivers
         TrawlNet.receiversList.remove(receiver)
 
+        #Comprobamos que el transfer no tiene mas receivers para hacer uso del canal de eventos
         if not TrawlNet.receiversList:
             key = 'IceStorm.TopicManager.Proxy'
             proxy = current.adapter.getCommunicator().propertyToProxy(key)
@@ -73,6 +82,7 @@ class TransferI(TrawlNet.Transfer):
             publisher = topic.getPublisher()
             event = TrawlNet.TransferEventPrx.uncheckedCast(publisher)
 
+            #Publicamos el evento de finalización del transfer 
             event.transferFinished(self.transfer)
 
     def destroy(self, current=None):
@@ -91,6 +101,7 @@ class TransferFactoryI(TrawlNet.TransferFactory):
         servant = TransferI(receiverFactory, self.senderFactory)
         proxy = current.adapter.addWithUUID(servant)
 
+        #Actualizamos el atributo del transfer con su proxy
         transfer = TrawlNet.TransferPrx.checkedCast(proxy)
         servant.transfer = transfer
 
@@ -113,8 +124,9 @@ class TransfersManager(Ice.Application):
         senderFactory = TrawlNet.SenderFactoryPrx.checkedCast(proxy2)
 
         if not senderFactory:
-            raise RuntimeError('The given proxy is not valid.')
+            raise RuntimeError('El proxy que se ha proporcionado no es valido.')
 
+        #Creamos y activamos el adaptador para TransferFactory y el proxy para llamadas remotas
         broker = self.communicator()
         servant = TransferFactoryI(senderFactory)
         adapter = broker.createObjectAdapter("TransfersManagerAdapter")
@@ -124,7 +136,7 @@ class TransfersManager(Ice.Application):
 
         adapter.activate()
 
-        #Subscripción a los eventos de PeerEvent
+        #Subscripción a los eventos de PeerEvent y activación del adaptador
         topic_manager = self.get_topic_manager()
         if not topic_manager:
             raise RuntimeError('El proxy \'%s\' no es válido.' % topic_manager)
@@ -144,9 +156,12 @@ class TransfersManager(Ice.Application):
         topic.subscribeAndGetPublisher(qos, subscriber)
 
         adapter_event.activate()
+
+        #Mantenemos al servidor a la escucha hasta que su proceso sea interrumpido
         self.shutdownOnInterrupt()
         ic.waitForShutdown()
 
+        #Eliminamos la subscripcion del canal de eventos
         topic.unsubscribe(subscriber)
 
         return 0

@@ -17,10 +17,12 @@ class TransferEventI(TrawlNet.TransferEvent):
         self.transfer = transfer
 
     def transferFinished(self, transfer, current=None):
+        #Comprobamos que el transfer que ha publicado el evento se corresponde con el nuestro
         if(transfer == self.transfer):
             print('[EVENTO] El transfer \'%s\' ha finalizado' % transfer)
-            transfer.destroy()
-            current.adapter.deactivate()
+            
+            transfer.destroy() #Destruimos el transfer
+            current.adapter.deactivate() #Desactivamos el adaptador del evento para finalizar el cliente 
 
 class ReceiverI(TrawlNet.Receiver):
     def __init__(self, fileName, sender, transfer):
@@ -30,11 +32,16 @@ class ReceiverI(TrawlNet.Receiver):
 
     def start(self, current=None):
         print('Iniciando transferencia de fichero \'%s\'' % self.fileName)
+
+        #Solicitamos la transferencia de un chunk del archivo con el tamaño BLOCK_SIZE
+        #Si se quiere recibir una mayor cantidad de archivo haría falta modificar a un numero mayor
         data = binascii.a2b_base64(self.sender.receive(BLOCK_SIZE)[1:])
 
+        #Realizamos la escritura en el directorio de descargas con los datos que hemos recibido del sender
         with open(os.path.join(DOWNLOAD_DIR,self.fileName), "wb") as file:
             file.write(data)
 
+        #Solicitamos el cierre del archivo cuando ya se ha recibido el archivo
         self.sender.close()
 
         print('Finalizada transferencia de fichero.')
@@ -71,6 +78,8 @@ class ReceiverI(TrawlNet.Receiver):
 
 class ReceiverFactoryI(TrawlNet.ReceiverFactory):
     def create(self, fileName, sender, transfer, current=None):
+        #Añadimos el sirviente con un Identity personalizado que será el nombre del fichero
+        #En caso de añadirlo con addWithUUID el id será aleatorio
         servant = ReceiverI(fileName, sender, transfer)
         proxy = current.adapter.add(servant, current.adapter.getCommunicator().stringToIdentity(fileName))
 
@@ -120,7 +129,7 @@ class Client(Ice.Application):
         #Usar el objeto transfer para crear las Peers
         receiver_list = transfer.createPeers(TrawlNet.FileList)
         
-        #Nos subscribimos a los eventos de TransferEvent y activacion del adaptador
+        #Nos subscribimos a los eventos de TransferEvent y activamos el adaptador para el uso del canal de eventos
         topic_manager = self.get_topic_manager()
 
         if not topic_manager:
@@ -145,11 +154,14 @@ class Client(Ice.Application):
         for receiver in receiver_list:
             receiver.start()
 
+        #Provocamos que el adaptador del evento se quede a la espera hasta recibir un evento
+        #y asi el cliente terminará cuando reciba el mensaje de que su transfer finalizó
         self.shutdownOnInterrupt()
         adapter_event.waitForDeactivate()
 
         print('\n-Se ha finalizado con exito la ejecución-')
 
+        #Nos desvinculamos del canal de eventos del TransferEvent
         transfer_topic.unsubscribe(subscriber)
 
         return 0

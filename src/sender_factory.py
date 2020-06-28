@@ -32,6 +32,7 @@ class SenderI(TrawlNet.Sender):
 
 class SenderFactoryI(TrawlNet.SenderFactory):
     def create(self, fileName, current=None):
+        #Realizamos una comprobación de la existencia del fichero en el directorio
         if not os.path.isfile(os.path.join(FILE_DIR, fileName)):
                 raise TrawlNet.FileDoesNotExistError('ERROR: The file \'%s\' does not exist' % file)
 
@@ -45,6 +46,7 @@ class SenderFactoryI(TrawlNet.SenderFactory):
 
 class Server(Ice.Application):
     def run(self, args):
+        #Creamos y activamos el adaptador para SenderFactory y el proxy para llamadas remotas
         broker = self.communicator()
         servant = SenderFactoryI()
 
