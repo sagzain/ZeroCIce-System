@@ -2,7 +2,7 @@ Sistema cliente-servidor que permite la descarga de ficheros mediante el uso de 
 
 ## Autor y Enlace
 
-https://github.com/Samuglz6/Gonzalez
+https://github.com/Samuglz6/ZeroCIce-System
 
 Samuel González Linde
 
@@ -17,7 +17,7 @@ Podrás consultar la estructura del proyecto y la ejecución del programa en may
 Para ejecutar el programa nos situamos en la carpeta raíz del proyecto:
 
 ```sh
-$ cd /Gonzalez
+$ cd /ZeroCIce-System
 ```
 
 Ejecutamos el lado del servidor en una terminal:
